@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import train_test_split
 
@@ -9,7 +11,7 @@ from db_conn import *
 table_name = 'loan'
 
 
-class class_iris_classification():
+class class_loan_classification():
     def __init__(self):
         pass
 
@@ -130,7 +132,7 @@ class class_iris_classification():
         dsvm.fit(self.X_train, self.y_train)
         self.y_predict = dsvm.predict(self.X_test)
 
-    def binary_dtree_KFold_performance(self):
+    def svm_KFold_performance(self):
         dsvm = svm.SVC()
         cv_results = cross_validate(dsvm, self.X, self.y, cv=5,
                                     scoring=['accuracy', 'precision', 'recall',
@@ -142,9 +144,43 @@ class class_iris_classification():
             if metric.startswith('test_'):
                 print(f'\n{metric[5:]}: {scores.mean():.2f}')
 
+    def train_and_test_logistic_regression_model(self):
+        model = LogisticRegression()
+        model.fit(self.X_train, self.y_train)
+        self.y_predict = model.predict(self.X_test)
+
+    def logistic_regression_KFold_performance(self):
+        model = LogisticRegression()
+        cv_results = cross_validate(model, self.X, self.y, cv=5,
+                                    scoring=['accuracy', 'precision', 'recall',
+                                             'f1'])
+
+        print(cv_results)
+
+        for metric, scores in cv_results.items():
+            if metric.startswith('test_'):
+                print(f'\n{metric[5:]}: {scores.mean():.2f}')
+
+    def train_and_test_random_forest_model(self):
+        model = RandomForestClassifier(n_estimators=5, random_state=0)
+        model.fit(self.X_train, self.y_train)
+        self.y_predict = model.predict(self.X_test)
+
+    def random_forest_KFold_performance(self):
+        model = RandomForestClassifier(n_estimators=5, random_state=0)
+        cv_results = cross_validate(model, self.X, self.y, cv=5,
+                                    scoring=['accuracy', 'precision', 'recall',
+                                             'f1'])
+
+        print(cv_results)
+
+        for metric, scores in cv_results.items():
+            if metric.startswith('test_'):
+                print(f'\n{metric[5:]}: {scores.mean():.2f}')
+
 
 def binary_svm_train_test_performance():
-    clf = class_iris_classification()
+    clf = class_loan_classification()
     clf.load_data_for_binary_classification()
     clf.data_split_train_test()
     clf.train_and_test_svm_model()
@@ -152,13 +188,51 @@ def binary_svm_train_test_performance():
 
 
 def binary_svm_KFold_performance():
-    clf = class_iris_classification()
+    clf = class_loan_classification()
     clf.load_data_for_binary_classification()
-    clf.binary_dtree_KFold_performance()
+    clf.svm_KFold_performance()
+
+
+def binary_logistic_regression_train_test_performance():
+    clf = class_loan_classification()
+    clf.load_data_for_binary_classification()
+    clf.data_split_train_test()
+    clf.train_and_test_logistic_regression_model()
+    clf.classification_performance_eval_binary(clf.y_test, clf.y_predict)
+
+
+def binary_logistic_regression_KFold_performance():
+    clf = class_loan_classification()
+    clf.load_data_for_binary_classification()
+    clf.logistic_regression_KFold_performance()
+
+
+def binary_random_forest_train_test_performance():
+    clf = class_loan_classification()
+    clf.load_data_for_binary_classification()
+    clf.data_split_train_test()
+    clf.train_and_test_logistic_regression_model()
+    clf.classification_performance_eval_binary(clf.y_test, clf.y_predict)
+
+
+def binary_random_forest_KFold_performance():
+    clf = class_loan_classification()
+    clf.load_data_for_binary_classification()
+    clf.logistic_regression_KFold_performance()
 
 
 if __name__ == "__main__":
-    clf = class_iris_classification()
+    clf = class_loan_classification()
     clf.import_loan_data()
+
+    print("Binary SVM Train Test Performance")
     binary_svm_train_test_performance()
     binary_svm_KFold_performance()
+
+    print("Binary Logistic Regression Train Test Performance")
+    binary_logistic_regression_train_test_performance()
+    binary_logistic_regression_KFold_performance()
+
+    print("Binary Random Forest Train Test Performance")
+    binary_random_forest_train_test_performance()
+    binary_random_forest_KFold_performance()
